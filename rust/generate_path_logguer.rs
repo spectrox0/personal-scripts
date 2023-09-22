@@ -4,47 +4,47 @@ use std::path::Path;
 use std::io::{self, Write, BufRead};
 
 fn main() -> io::Result<()> {
-    // Definir los nombres del directorio y del archivo
+    // Define directory and file names
     let dir = "logs";
     let file = "hub-opratel-dev.log";
     
-    // Obtener la ruta completa del archivo de log
+    // Get the full path of the log file
     let current_dir = env::current_dir()?;
     let full_path = current_dir.join(dir).join(file);
     
-    // Crear el directorio si no existe
+    // Create the directory if it does not exist
     if !full_path.parent().unwrap().exists() {
         fs::create_dir_all(full_path.parent().unwrap())?;
         println!("Directory {:?} created.", full_path.parent().unwrap());
     }
     
-    // Crear el archivo de log si no existe
+    // Create the log file if it does not exist
     if !full_path.exists() {
         File::create(&full_path)?;
         println!("File {:?} created.", full_path);
     }
     
-    // Definir la ruta del archivo .env
+    // Define the path of the .env file
     let env_file = current_dir.join(".env");
     
-    // Leer el archivo .env, si existe, y almacenar las líneas en un vector
+    // Read the .env file, if it exists, and store the lines in a vector
     let mut lines = if env_file.exists() {
         io::BufReader::new(File::open(&env_file)?).lines().collect::<Result<Vec<_>, _>>()?
     } else {
         Vec::new()
     };
     
-    // Remover la variable de entorno antigua, si existe
+    // Remove the old environment variable, if it exists
     if let Some(pos) = lines.iter().position(|line| line.starts_with("LOGGUER_FILE_NAME=")) {
         lines.remove(pos);
         println!("Old environment variable LOGGUER_FILE_NAME deleted from .env file.");
     }
     
-    // Añadir la nueva variable de entorno al vector
+    // Add the new environment variable to the vector
     lines.push(format!("LOGGUER_FILE_NAME={}", full_path.display()));
     println!("New environment variable LOGGUER_FILE_NAME added to .env file.");
     
-    // Escribir las líneas actualizadas de nuevo al archivo .env
+    // Write the updated lines back to the .env file
     fs::write(env_file, lines.join("\n"))?;
     
     Ok(())
